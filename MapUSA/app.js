@@ -64,5 +64,26 @@ d3.json('zombie-attacks.json').then(zombieData => {
       .attr('fill', d => makeFillColor(d, mapColor))
       .attr('stroke', strokeColor)
       .attr('stroke-width', strokeWidth)
+
+    drawCities()
   })
 })
+
+function drawCities() {
+  d3.json('us-cities.json').then(cityData => {
+    svg
+      .selectAll('circle')
+      .data(cityData)
+      .enter()
+      .append('circle')
+      .style('fill', '#9d497a')
+      .style('opacity', 0.8)
+      // 使用 projection 轉換資料座標
+      .attr('cx', d => projection([d.lon, d.lat])[0])
+      .attr('cy', d => projection([d.lon, d.lat])[1])
+      // 依據資料 population 來換算圓圈半徑
+      .attr('r', d => Math.sqrt(parseInt(d.population) * 0.00005))
+      .append('title')
+      .text(d => d.city)
+  })
+}
