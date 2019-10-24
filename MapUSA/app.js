@@ -83,7 +83,17 @@ function drawCities() {
       .attr('cy', d => projection([d.lon, d.lat])[1])
       // 依據資料 population 來換算圓圈半徑
       .attr('r', d => Math.sqrt(parseInt(d.population) * 0.00005))
-      .append('title')
+
+    // 顯示文字
+    svg
+      .selectAll('text')
+      .data(cityData)
+      .enter()
+      .append('text')
+      .attr('x', d => projection([d.lon, d.lat])[0] - 18)
+      .attr('y', d => projection([d.lon, d.lat])[1] + 3)
       .text(d => d.city)
+      .style('font-size', '10')
+      .attr('fill', fillColor)
   })
 }
