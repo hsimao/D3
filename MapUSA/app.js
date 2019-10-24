@@ -69,6 +69,7 @@ d3.json('zombie-attacks.json').then(zombieData => {
   })
 })
 
+// 繪製 city
 function drawCities() {
   d3.json('us-cities.json').then(cityData => {
     svg
@@ -97,3 +98,40 @@ function drawCities() {
       .attr('fill', fillColor)
   })
 }
+
+// 控制方向按鈕
+d3.selectAll('#buttons button').on('click', function() {
+  const offset = projection.translate()
+
+  const distance = 100
+
+  // 取得點擊當下按鈕得 class 來判斷方向
+  const direction = d3.select(this).attr('class')
+  if (direction === 'up') offset[1] -= distance
+  if (direction === 'down') offset[1] += distance
+  if (direction === 'left') offset[0] -= distance
+  if (direction === 'right') offset[0] += distance
+
+  // 更新投影位置
+  projection.translate(offset)
+
+  // 更新地圖
+  svg
+    .selectAll('path')
+    .transition() // 加上 transition 增加平滑移動效果
+    .attr('d', path)
+
+  // 更新 city 圓圈
+  svg
+    .selectAll('circle')
+    .transition()
+    .attr('cx', d => projection([d.lon, d.lat])[0])
+    .attr('cy', d => projection([d.lon, d.lat])[1])
+
+  // 更新 city 文字
+  svg
+    .selectAll('text')
+    .transition()
+    .attr('x', d => projection([d.lon, d.lat])[0] - 18)
+    .attr('y', d => projection([d.lon, d.lat])[1] + 3)
+})
