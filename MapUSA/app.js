@@ -24,7 +24,7 @@ function makeFillColor(val, colors) {
   return num ? colors(num) : '#ddd'
 }
 
-let projection, path, svg
+let projection, path, svg, map, drapMap
 
 function mapInit() {
   // 創建投影, 將 3D 地圖轉換成 2D
@@ -42,10 +42,28 @@ function mapInit() {
     .attr('width', chartWidth)
     .attr('height', chartHeight)
 
+  map = svg
+    .append('g')
+    .attr('id', 'map')
+    .call(handleDrap())
+
+  // 繪製滿版的 rect svg 讓整個畫面都可觸發拖曳效果
+  drawFullRect()
   drawMap()
   handleDirectionButton()
 }
 mapInit()
+
+// 繪製滿版 rect svg
+function drawFullRect() {
+  map
+    .append('rect')
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('width', chartWidth)
+    .attr('height', chartHeight)
+    .attr('opacity', 0)
+}
 
 // 產生繪製地圖的資料
 function makeMapData() {
@@ -78,7 +96,7 @@ async function drawMap() {
   const data = await makeMapData()
   if (!data) return
 
-  svg
+  map
     .selectAll('path')
     .data(data)
     .enter()
@@ -94,7 +112,7 @@ async function drawMap() {
 // 繪製 city
 function drawCities() {
   d3.json('us-cities.json').then(cityData => {
-    svg
+    map
       .selectAll('circle')
       .data(cityData)
       .enter()
@@ -108,7 +126,7 @@ function drawCities() {
       .attr('r', d => Math.sqrt(parseInt(d.population) * 0.00005))
 
     // 顯示文字
-    svg
+    map
       .selectAll('text')
       .data(cityData)
       .enter()
@@ -118,6 +136,19 @@ function drawCities() {
       .text(d => d.city)
       .style('font-size', '10')
       .attr('fill', fillColor)
+  })
+}
+
+// 拖曳事件
+function handleDrap() {
+  return d3.drag().on('drag', () => {
+    const offset = projection.translate()
+    offset[0] += d3.event.dx
+    offset[1] += d3.event.dy
+
+    // 更新投影位置
+    projection.translate(offset)
+    updateMap()
   })
 }
 
@@ -134,28 +165,31 @@ function handleDirectionButton() {
     if (direction === 'down') offset[1] += distance
     if (direction === 'left') offset[0] -= distance
     if (direction === 'right') offset[0] += distance
-
     // 更新投影位置
     projection.translate(offset)
-
-    // 更新地圖
-    svg
-      .selectAll('path')
-      .transition() // 加上 transition 增加平滑移動效果
-      .attr('d', path)
-
-    // 更新 city 圓圈
-    svg
-      .selectAll('circle')
-      .transition()
-      .attr('cx', d => projection([d.lon, d.lat])[0])
-      .attr('cy', d => projection([d.lon, d.lat])[1])
-
-    // 更新 city 文字
-    svg
-      .selectAll('text')
-      .transition()
-      .attr('x', d => projection([d.lon, d.lat])[0] - 18)
-      .attr('y', d => projection([d.lon, d.lat])[1] + 3)
+    updateMap()
   })
+}
+
+// 更新
+function updateMap() {
+  // 更新地圖
+  map
+    .selectAll('path')
+    .transition() // 加上 transition 增加平滑移動效果
+    .attr('d', path)
+
+  // 更新 city 圓圈
+  map
+    .selectAll('circle')
+    .transition()
+    .attr('cx', d => projection([d.lon, d.lat])[0])
+    .attr('cy', d => projection([d.lon, d.lat])[1])
+
+  // 更新 city 文字
+  map
+    .selectAll('text')
+    .transition()
+    .attr('x', d => projection([d.lon, d.lat])[0] - 18)
+    .attr('y', d => projection([d.lon, d.lat])[1] + 3)
 }
