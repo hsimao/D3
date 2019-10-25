@@ -28,10 +28,7 @@ let projection, path, svg, map, drapMap
 
 function mapInit() {
   // 創建投影, 將 3D 地圖轉換成 2D
-  projection = d3
-    .geoAlbersUsa()
-    .scale([chartWidth])
-    .translate([chartWidth / 2, chartHeight / 2])
+  projection = d3.geoAlbersUsa().translate([0, 0])
 
   path = d3.geoPath(projection)
 
@@ -45,12 +42,14 @@ function mapInit() {
   map = svg
     .append('g')
     .attr('id', 'map')
-    .call(handleDrap())
+    .call(handleZoomAndDrag()) // 綁定拖曳、縮放事件
+    .call(handleZoomAndDrag().transform, d3.zoomIdentity.translate(chartWidth / 2, chartHeight / 2).scale(1))
 
   // 繪製滿版的 rect svg 讓整個畫面都可觸發拖曳效果
   drawFullRect()
   drawMap()
   handleDirectionButton()
+  handleZoomButton()
 }
 mapInit()
 
@@ -139,8 +138,8 @@ function drawCities() {
   })
 }
 
-// 拖曳事件
-function handleDrap() {
+// 單一拖曳事件 - 目前沒用到
+function handleDrag() {
   return d3.drag().on('drag', () => {
     const offset = projection.translate()
     offset[0] += d3.event.dx
@@ -152,21 +151,55 @@ function handleDrap() {
   })
 }
 
+// 縮放、拖曳事件
+function handleZoomAndDrag() {
+  return d3
+    .zoom()
+    .scaleExtent([0.5, 3.0]) // 限制縮放範圍
+    .translateExtent([[-1000, -500], [1000, 500]]) // 限制移動範圍
+    .on('zoom', function() {
+      const offset = [d3.event.transform.x, d3.event.transform.y]
+      const scale = d3.event.transform.k * 2000
+      // 更新投影位置
+      projection.translate(offset).scale(scale)
+      updateMap()
+    })
+}
+
 // 控制方向按鈕
 function handleDirectionButton() {
   d3.selectAll('#buttons button').on('click', function() {
-    const offset = projection.translate()
-
     const distance = 100
+    let x = 0
+    let y = 0
 
     // 取得點擊當下按鈕得 class 來判斷方向
     const direction = d3.select(this).attr('class')
-    if (direction === 'up') offset[1] -= distance
-    if (direction === 'down') offset[1] += distance
-    if (direction === 'left') offset[0] -= distance
-    if (direction === 'right') offset[0] += distance
-    // 更新投影位置
-    projection.translate(offset)
+    if (direction === 'up') y -= distance
+    if (direction === 'down') y += distance
+    if (direction === 'left') x -= distance
+    if (direction === 'right') x += distance
+
+    map.transition().call(handleZoomAndDrag().translateBy, x, y)
+    updateMap()
+  })
+}
+
+// 縮放控制按鈕
+function handleZoomButton() {
+  d3.selectAll('#buttons .zooming').on('click', function() {
+    let scale = 1
+
+    const direction = d3
+      .select(this)
+      .attr('class')
+      .replace('zooming', '')
+      .trim()
+
+    if (direction === 'in') scale = 1.25
+    if (direction === 'out') scale = 0.75
+
+    map.transition().call(handleZoomAndDrag().scaleBy, scale)
     updateMap()
   })
 }
@@ -174,22 +207,17 @@ function handleDirectionButton() {
 // 更新
 function updateMap() {
   // 更新地圖
-  map
-    .selectAll('path')
-    .transition() // 加上 transition 增加平滑移動效果
-    .attr('d', path)
+  svg.selectAll('path').attr('d', path)
 
   // 更新 city 圓圈
-  map
+  svg
     .selectAll('circle')
-    .transition()
     .attr('cx', d => projection([d.lon, d.lat])[0])
     .attr('cy', d => projection([d.lon, d.lat])[1])
 
   // 更新 city 文字
-  map
+  svg
     .selectAll('text')
-    .transition()
     .attr('x', d => projection([d.lon, d.lat])[0] - 18)
     .attr('y', d => projection([d.lon, d.lat])[1] + 3)
 }
