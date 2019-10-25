@@ -65,6 +65,10 @@ function handleUpdateBtn() {
       .selectAll('rect')
       .data(data)
       // 重新繪製高度
+      .transition()
+      .delay((d, i) => (i / data.length) * 1000) // 逐一延遲, 全部延遲 1000 毫秒, 平均分配
+      .duration(600)
+      .ease(d3.easeCubicInOut)
       .attr('y', d => chartHeight - scaleY(d))
       .attr('height', d => scaleY(d))
 
@@ -72,6 +76,10 @@ function handleUpdateBtn() {
     svg
       .selectAll('text')
       .data(data)
+      .transition()
+      .delay((d, i) => (i / data.length) * 1000) // 逐一延遲, 全部延遲 1000 毫秒, 平均分配
+      .duration(600)
+      .ease(d3.easeCubicInOut)
       .text(d => d)
       .attr('x', (d, i) => scaleX(i) + scaleX.bandwidth() / 2)
       .attr('y', d => chartHeight - scaleY(d) + 15)
