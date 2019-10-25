@@ -54,3 +54,27 @@ function drawText(target, data) {
     .attr('text-anchor', 'middle') // 文字左右置中
 }
 drawText(svg, data)
+
+// 更新直線圖, 資料反轉後更新
+function handleUpdateBtn() {
+  d3.select('button').on('click', () => {
+    data.reverse()
+
+    // 重新繪製有資料變動的 svg 線條圖
+    svg
+      .selectAll('rect')
+      .data(data)
+      // 重新繪製高度
+      .attr('y', d => chartHeight - scaleY(d))
+      .attr('height', d => scaleY(d))
+
+    // 重新繪製有變動的 text
+    svg
+      .selectAll('text')
+      .data(data)
+      .text(d => d)
+      .attr('x', (d, i) => scaleX(i) + scaleX.bandwidth() / 2)
+      .attr('y', d => chartHeight - scaleY(d) + 15)
+  })
+}
+handleUpdateBtn()
