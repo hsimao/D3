@@ -1,4 +1,4 @@
-const data = [6, 20, 21, 14, 2, 30, 7, 16, 25, 5, 11, 28, 10, 26, 9]
+let data = [6, 20, 21, 14, 2, 30, 7, 16, 25, 5, 11, 28, 10, 26, 9]
 
 // Create SVG Element
 const chartWidth = 800
@@ -14,7 +14,7 @@ const scaleX = d3
   .paddingInner(barPadding)
 
 // 產生 y 軸與 height 算換公式
-const scaleY = d3
+let scaleY = d3
   .scaleLinear()
   .domain([0, d3.max(data)])
   .range([0, chartHeight])
@@ -58,7 +58,10 @@ drawText(svg, data)
 // 更新直線圖, 資料反轉後更新
 function handleUpdateBtn() {
   d3.select('button').on('click', () => {
-    data.reverse()
+    // data.reverse()
+
+    data[0] = 50 // 更新資料時如果有變動到最大值, 需要重新更新 domain
+    scaleY.domain([0, d3.max(data)])
 
     // 重新繪製有資料變動的 svg 線條圖
     svg
