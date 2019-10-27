@@ -34,6 +34,19 @@ const scaleY = d3
 // Create Axis Ｘ軸 底線
 const axisX = d3.axisBottom(scaleX)
 
+// 設置遮罩 clip paths, 讓 circle 的 g 屬性套用, 讓超出範圍的 circle 可被裁切
+function createClipPath() {
+  svg
+    .append('clipPath')
+    .attr('id', 'plot-area-clip-path')
+    .append('rect')
+    .attr('x', padding)
+    .attr('y', padding)
+    .attr('width', chartWidth - padding * 3)
+    .attr('height', chartHeight - padding * 2)
+}
+createClipPath()
+
 svg
   .append('g')
   .attr('class', 'x-axis')
@@ -52,6 +65,9 @@ svg
 // Create Circles
 function createCircles() {
   svg
+    .append('g')
+    .attr('id', 'plot-area')
+    .attr('clip-path', 'url(#plot-area-clip-path') // 遮罩配置, 讓超出範圍的 circles 可被裁切
     .selectAll('circle')
     .data(data)
     .enter()
