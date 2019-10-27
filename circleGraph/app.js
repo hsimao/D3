@@ -113,6 +113,9 @@ function handleUpdateBtn() {
   d3.select('button').on('click', () => {
     const data = randomData()
 
+    const colors = ['#f26d6d', '#1e6190', '#7559d9', '#d1ab03']
+    const colorIndex = Math.floor(Math.random() * colors.length)
+
     // 更新 svg 座標
     scaleX.domain([0, d3.max(data, d => d[0])])
     scaleY.domain([0, d3.max(data, d => d[1])])
@@ -125,6 +128,18 @@ function handleUpdateBtn() {
       .duration(1000)
       .attr('cx', d => scaleX(d[0]))
       .attr('cy', d => scaleY(d[1]))
+      // 每個 circle 顏色都一樣
+      .transition()
+      .attr('fill', colors[colorIndex])
+
+    // 每個 circle 顏色都要不一樣
+    // .on('end', function() {
+    //   const colors = ['#f26d6d', '#1e6190', '#7559d9', '#d1ab03']
+    //   const colorIndex = Math.floor(Math.random() * colors.length)
+    //   d3.select(this)
+    //     .transition()
+    //     .attr('fill', colors[colorIndex])
+    // })
 
     // 重新繪製 Labels
     svg
